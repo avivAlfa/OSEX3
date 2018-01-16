@@ -103,43 +103,29 @@ extern int sys_unlink(void);
 extern int sys_wait(void);
 extern int sys_write(void);
 extern int sys_uptime(void);
-extern int sys_sem_open(void);
-extern int sys_sem_close(void);
-extern int sys_sem_wait(void);
-extern int sys_sem_try_wait(void);
-extern int sys_sem_post(void);
-extern int sys_sem_reset(void);
-extern int sys_sem_unlink(void);
 
 static int (*syscalls[])(void) = {
-[SYS_fork]        sys_fork,
-[SYS_exit]        sys_exit,
-[SYS_wait]        sys_wait,
-[SYS_pipe]        sys_pipe,
-[SYS_read]        sys_read,
-[SYS_kill]        sys_kill,
-[SYS_exec]        sys_exec,
-[SYS_fstat]       sys_fstat,
-[SYS_chdir]       sys_chdir,
-[SYS_dup]         sys_dup,
-[SYS_getpid]      sys_getpid,
-[SYS_sbrk]        sys_sbrk,
-[SYS_sleep]       sys_sleep,
-[SYS_uptime]      sys_uptime,
-[SYS_open]        sys_open,
-[SYS_write]       sys_write,
-[SYS_mknod]       sys_mknod,
-[SYS_unlink]      sys_unlink,   
-[SYS_link]        sys_link,
-[SYS_mkdir]       sys_mkdir,
-[SYS_close]       sys_close,
-[SYS_sem_open]    sys_sem_open,
-[SYS_sem_close]   sys_sem_close,
-[SYS_sem_wait]    sys_sem_wait,
-[SYS_sem_try_wait] sys_sem_try_wait,
-[SYS_sem_post]    sys_sem_post,
-[SYS_sem_reset]   sys_sem_reset,
-[SYS_sem_unlink]  sys_sem_unlink,
+[SYS_fork]    sys_fork,
+[SYS_exit]    sys_exit,
+[SYS_wait]    sys_wait,
+[SYS_pipe]    sys_pipe,
+[SYS_read]    sys_read,
+[SYS_kill]    sys_kill,
+[SYS_exec]    sys_exec,
+[SYS_fstat]   sys_fstat,
+[SYS_chdir]   sys_chdir,
+[SYS_dup]     sys_dup,
+[SYS_getpid]  sys_getpid,
+[SYS_sbrk]    sys_sbrk,
+[SYS_sleep]   sys_sleep,
+[SYS_uptime]  sys_uptime,
+[SYS_open]    sys_open,
+[SYS_write]   sys_write,
+[SYS_mknod]   sys_mknod,
+[SYS_unlink]  sys_unlink,
+[SYS_link]    sys_link,
+[SYS_mkdir]   sys_mkdir,
+[SYS_close]   sys_close,
 };
 
 void
