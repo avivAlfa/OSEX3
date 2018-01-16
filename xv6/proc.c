@@ -206,6 +206,11 @@ fork(void)
   for(i = 0; i < NOFILE; i++)
     if(curproc->ofile[i])
       np->ofile[i] = filedup(curproc->ofile[i]);
+
+  for(i = 0; i < NOSEM; i++)
+   if(curproc->osem[i])
+      np->osem[i] = semdup(curproc->osem[i]);
+
   np->cwd = idup(curproc->cwd);
 
   safestrcpy(np->name, curproc->name, sizeof(curproc->name));
@@ -229,7 +234,7 @@ exit(void)
 {
   struct proc *curproc = myproc();
   struct proc *p;
-  int fd;
+  int fd, sd;
 
   if(curproc == initproc)
     panic("init exiting");
@@ -239,6 +244,14 @@ exit(void)
     if(curproc->ofile[fd]){
       fileclose(curproc->ofile[fd]);
       curproc->ofile[fd] = 0;
+    }
+  }
+
+    // Close all open semaphores.
+  for(sd = 0; sd < NOSEM; sd++){
+    if(curproc->osem[sd]){
+      semclose(curproc->osem[sd]);
+      curproc->osem[sd] = 0;
     }
   }
 

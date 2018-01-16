@@ -154,9 +154,8 @@ int sys_sem_post(void)
         return -2;
 
     acquire(&s->sslock);
-    if (++s->available_locks == 1)
-        ;
-    wakeup(s);
+    if (++(s->available_locks) == 1)
+        wakeup(s);
     release(&s->sslock);
     return 0;
 }

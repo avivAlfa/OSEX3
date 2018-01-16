@@ -69,3 +69,14 @@ int semclose(struct sem *s)
     release(&stable.gslock);
     return 0;
 }
+
+// Increment ref count for file f.
+struct sem* semdup(struct sem *s)
+{
+  acquire(&stable.gslock);
+  if(s->ref < 1)
+    panic("semdup");
+  s->ref++;
+  release(&stable.gslock);
+  return s;
+}
