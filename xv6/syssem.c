@@ -1,10 +1,10 @@
 #include "types.h"
-#include "x86.h"
 #include "defs.h"
-#include "date.h"
 #include "param.h"
-#include "memlayout.h"
 #include "mmu.h"
+#include "proc.h"
+#include "x86.h"
+#include "spinlock.h"
 #include "sem.h"
 
 static int argsd(int *psd, struct sem **ps)
@@ -21,6 +21,22 @@ static int argsd(int *psd, struct sem **ps)
     if (ps)
         *ps = s;
     return 0;
+}
+
+// Allocate a sem descriptor for the given semapore.
+static int sdalloc(struct sem *s)
+{
+    int sd;
+    struct proc *curproc = myproc();
+    for (sd = 0; sd < NOSEM; sd++)
+    {
+        if (curproc->osem[sd] == 0)
+        {
+            curproc->osem[sd] = s;
+            return sd;
+        }
+    }
+    return -1;
 }
 
 int sys_sem_open(void)
@@ -42,9 +58,9 @@ int sys_sem_open(void)
         return -1;
     }
 
-    if (s = isExistSem(name) > 0) // if sem exist s will point it
+    if ((s = isExistSem(name)) != 0)
     {
-        if (sd = sdalloc(s) < 0)
+        if ((sd = sdalloc(s)) < 0)
         {
             if (s)
                 semclose(s);
@@ -64,20 +80,19 @@ int sys_sem_open(void)
     safestrcpy(s->name, name, SEM_NAME_LENGTH);
     s->max = maxVal;
     s->available_locks = init;
-    return s;
+    return 0;
 }
 
 int sys_sem_close(void)
 {
     int sd;
     struct sem *s;
-    struct proc *curproc = myproc();
 
-    if (argstr(0, &sd) < 0)
-    {
-        //  fprintf(stderr, "process %d, failed in sem_close, cant load args from stack", getpid());
-        return -1;
-    }
+    // if (argstr(0, &sd) < 0)
+    // {
+    //     //  fprintf(stderr, "process %d, failed in sem_close, cant load args from stack", getpid());
+    //     return -1;
+    // }
     if (argsd(&sd, &s) < 0)
         return -1;
     return semclose(s);
@@ -186,3 +201,29 @@ int sys_sem_reset(void)
     return returnVal;
 }
 
+int 
+sys_sem_unlink(void)
+{
+	char *name;
+	struct sem *s;
+
+	if (argstr(0, &name) < 0)
+		return -1;
+
+	if ((s = isExistSem(name)) == 0)
+		return -1;
+	
+	acquire(&s->sslock);
+	while (1)
+	{
+		if (s->ref == 0) {
+			memset(s->name, 0, SEM_NAME_LENGTH);
+			s->owner_pid = 0;
+			s->available_locks = 0;
+			s->max = 0;
+			release(&s->sslock);
+			return 0;
+		}
+		sleep(&s->ref, &s->sslock);
+	}
+}

@@ -1,6 +1,18 @@
+#include "types.h"
+#include "defs.h"
+#include "param.h"
+#include "memlayout.h"
+#include "spinlock.h"
+#include "mmu.h"
+#include "proc.h"
+#include "x86.h"
 #include "sem.h"
 
-
+struct
+{
+    struct spinlock gslock; //global semaphore lock
+    struct sem sem[NSEM];
+} stable;
 
 struct sem *isExistSem(char *name)
 {
@@ -17,7 +29,8 @@ struct sem *isExistSem(char *name)
         }
     }
     release(&stable.gslock);
-    return -1;
+    s = 0;   
+    return s;
 }
 
 struct sem *semalloc(char *name, int init, int maxVal)
@@ -41,21 +54,6 @@ struct sem *semalloc(char *name, int init, int maxVal)
     return s;
 }
 
-// Allocate a sem descriptor for the given semapore.
-static int sdalloc(struct sem *s)
-{
-    int sd;
-    struct proc *curproc = myproc();
-    for (sd = 0; sd < NOSEM; sd++)
-    {
-        if (curproc->osem[sd] == 0)
-        {
-            curproc->osem[sd] = s;
-            return sd;
-        }
-    }
-    return -1;
-}
 
 int semclose(struct sem *s)
 {
@@ -66,7 +64,7 @@ int semclose(struct sem *s)
     s->ref--;
     if (s->ref == 0)
     {
-        wakeup(s);
+        wakeup(&s->ref);
     }
     release(&stable.gslock);
     return 0;

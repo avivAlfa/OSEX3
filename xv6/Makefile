@@ -3,6 +3,7 @@ OBJS = \
 	console.o\
 	exec.o\
 	file.o\
+	sem.o\
 	fs.o\
 	ide.o\
 	ioapic.o\
@@ -21,6 +22,7 @@ OBJS = \
 	swtch.o\
 	syscall.o\
 	sysfile.o\
+	syssem.o\
 	sysproc.o\
 	trapasm.o\
 	trap.o\

@@ -34,6 +34,12 @@ int             fileread(struct file*, char*, int n);
 int             filestat(struct file*, struct stat*);
 int             filewrite(struct file*, char*, int n);
 
+// sem.c
+struct sem *isExistSem(char *name);
+struct sem *semalloc(char *name, int init, int maxVal);
+// static int sdalloc(struct sem *s);
+int semclose(struct sem *s);
+
 // fs.c
 void            readsb(int dev, struct superblock *sb);
 int             dirlink(struct inode*, char*, uint);
@@ -104,7 +110,7 @@ int             pipewrite(struct pipe*, char*, int);
 //PAGEBREAK: 16
 // proc.c
 int             cpuid(void);
-void            exit(void); 
+void            exit(void);
 int             fork(void);
 int             growproc(int);
 int             kill(int);
