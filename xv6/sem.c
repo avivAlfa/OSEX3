@@ -21,7 +21,7 @@ struct sem *isExistSem(char *name)
     acquire(&stable.gslock);
     for (s = stable.sem; s < stable.sem + NSEM; s++)
     {
-        if (strncmp(s->name, name, SEM_NAME_LENGTH))
+        if (strncmp(s->name, name, SEM_NAME_LENGTH) == 0)
         {
             s->ref++;
             release(&stable.gslock);
@@ -79,4 +79,21 @@ struct sem* semdup(struct sem *s)
   s->ref++;
   release(&stable.gslock);
   return s;
+}
+
+int semunlink(struct sem *s)
+{
+    acquire(&stable.gslock);
+	while (1)
+	{
+		if (s->ref == 0) {
+			memset(s->name, 0, SEM_NAME_LENGTH);
+			s->owner_pid = 0;
+			s->available_locks = 0;
+			s->max = 0;
+			release(&stable.gslock);
+			return 0;
+		}
+		sleep(&s->ref, &s->sslock);
+	}
 }

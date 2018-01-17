@@ -39,7 +39,8 @@ struct sem *isExistSem(char *name);
 struct sem *semalloc(char *name, int init, int maxVal);
 // static int sdalloc(struct sem *s);
 int semclose(struct sem *s);
-struct sem* semdup(struct sem *s);
+struct sem* semdup(struct sem *f);
+int semunlink(struct sem *s);
 
 // fs.c
 void            readsb(int dev, struct superblock *sb);

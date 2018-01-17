@@ -30,7 +30,7 @@ static int sdalloc(struct sem *s)
     struct proc *curproc = myproc();
     for (sd = 0; sd < NOSEM; sd++)
     {
-        if (curproc->osem[sd] == 0)
+        if (curproc->osem[sd] == 0)  
         {
             curproc->osem[sd] = s;
             return sd;
@@ -48,13 +48,13 @@ int sys_sem_open(void)
 
     if (argstr(0, &name) < 0 || argint(1, &init) < 0 || argint(2, &maxVal) < 0)
     {
-        //  fprintf(stderr, "process %d, failed in sem_open, cant load args from stack", getpid());
+        //   fprintf(stderr, "process %d, failed in sem_open, cant load args from stack", getpid());
         return -1;
     }
 
     if (strlen(name) > SEM_NAME_LENGTH || init > maxVal || init < 0)
     {
-        //  fprintf(stderr, "process %d, failed in sem_open, Invalid arguments", getpid());
+        //   fprintf(stderr, "process %d, failed in sem_open, Invalid arguments", getpid());
         return -1;
     }
 
@@ -64,11 +64,12 @@ int sys_sem_open(void)
         {
             if (s)
                 semclose(s);
-            return -1;
+            return -2;
         }
     }
     else
     {
+        // fprintf(1, "------MAKING NEW SEM------");
         if ((s = semalloc(name, init, maxVal)) == 0 || (sd = sdalloc(s)) < 0)
         {
             if (s)
@@ -80,7 +81,7 @@ int sys_sem_open(void)
     safestrcpy(s->name, name, SEM_NAME_LENGTH);
     s->max = maxVal;
     s->available_locks = init;
-    return 0;
+    return sd; 
 }
 
 int sys_sem_close(void)
@@ -88,11 +89,6 @@ int sys_sem_close(void)
     int sd;
     struct sem *s;
 
-    // if (argstr(0, &sd) < 0)
-    // {
-    //     //  fprintf(stderr, "process %d, failed in sem_close, cant load args from stack", getpid());
-    //     return -1;
-    // }
     if (argsd(&sd, &s) < 0)
         return -1;
     return semclose(s);
@@ -107,15 +103,14 @@ int sys_sem_wait(void)
         return -1;
 
     acquire(&s->sslock);
-    if (s->available_locks > 0)
-    {
-        s->available_locks--;
-        release(&s->sslock);
-    }
-    else
+    
+    while (s->available_locks == 0)
     {
         sleep(s, &s->sslock);
     }
+    
+    s->available_locks--;
+        
     release(&s->sslock);
     return 0;
 }
@@ -124,7 +119,7 @@ int sys_sem_try_wait(void)
 {
     int sd;
     struct sem *s;
-    int returnVal = 0;
+    int returnVal = -1;
 
     if (argsd(&sd, &s) < 0)
         return -1;
@@ -133,12 +128,10 @@ int sys_sem_try_wait(void)
     if (s->available_locks > 0)
     {
         s->available_locks--;
+        returnVal = 0;
     }
-    else
-    {
-        returnVal = -1;
-    }
-    release(&s->sslock);
+    release(&s->sslock);   
+
     return returnVal;
 }
 
@@ -154,6 +147,7 @@ int sys_sem_post(void)
         return -2;
 
     acquire(&s->sslock);
+    
     if (++(s->available_locks) == 1)
         wakeup(s);
     release(&s->sslock);
@@ -211,18 +205,6 @@ sys_sem_unlink(void)
 
 	if ((s = isExistSem(name)) == 0)
 		return -1;
-	
-	acquire(&s->sslock);
-	while (1)
-	{
-		if (s->ref == 0) {
-			memset(s->name, 0, SEM_NAME_LENGTH);
-			s->owner_pid = 0;
-			s->available_locks = 0;
-			s->max = 0;
-			release(&s->sslock);
-			return 0;
-		}
-		sleep(&s->ref, &s->sslock);
-	}
+
+    return semunlink(s);
 }
